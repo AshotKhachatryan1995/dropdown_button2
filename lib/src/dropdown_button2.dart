@@ -1352,27 +1352,33 @@ class DropdownButton2State<T> extends State<DropdownButton2<T>>
   }
 
   void _updateSelectedIndex() {
-    if (widget.items == null ||
-        widget.items!.isEmpty ||
-        (widget.value == null &&
-            widget.items!
-                .where((DropdownMenuItem<T> item) =>
-                    item.enabled && item.value == widget.value)
-                .isEmpty)) {
+    if (widget.items == null || widget.items!.isEmpty) {
       _selectedIndex = null;
       return;
     }
 
-    assert(widget.items!
-            .where((DropdownMenuItem<T> item) => item.value == widget.value)
-            .length ==
-        1);
+    assert(
+      widget.items!
+              .where((DropdownMenuItem<T> item) => item.value == widget.value)
+              .length <=
+          1,
+      'Multiple items with the same value were found.',
+    );
+
     for (int itemIndex = 0; itemIndex < widget.items!.length; itemIndex++) {
       if (widget.items![itemIndex].value == widget.value) {
         _selectedIndex = itemIndex;
         return;
       }
     }
+
+    // No item matches the current value - a valid state (e.g. a previously
+    // selected value no longer present after `items` was refreshed), not an
+    // error. Reset here instead of leaving a stale index from a prior,
+    // possibly longer/different items list: fed into the closed field's
+    // IndexedStack, a stale index can land out of range or on the wrong
+    // item and render blank instead of falling back to the hint.
+    _selectedIndex = null;
   }
 
   @override
